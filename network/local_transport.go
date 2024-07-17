@@ -12,7 +12,7 @@ type LocalTransport struct {
 	peers     map[NetAddr]*LocalTransport
 }
 
-func NewLocalTransport(addr NetAddr) *LocalTransport {
+func NewLocalTransport(addr NetAddr) Transport {
 	return &LocalTransport{
 		addr:      addr,
 		consumeCh: make(chan RPC, 1024),
@@ -24,10 +24,10 @@ func (t *LocalTransport) Consume() <-chan RPC {
 	return t.consumeCh
 }
 
-func (t *LocalTransport) Connect(tr *LocalTransport) error {
+func (t *LocalTransport) Connect(tr Transport) error {
 	t.lock.Lock()
 	defer t.lock.Unlock()
-	t.peers[tr.Addr()] = tr
+	t.peers[tr.Addr()] = tr.(*LocalTransport)
 	return nil
 }
 func (t *LocalTransport) SendMessage(to NetAddr, payload []byte) error {
