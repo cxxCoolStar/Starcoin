@@ -1,6 +1,9 @@
 package types
 
-import "fmt"
+import (
+	"encoding/hex"
+	"fmt"
+)
 
 type Address [20]uint8
 
@@ -10,6 +13,10 @@ func (a Address) ToSlice() []byte {
 		b[i] = a[i]
 	}
 	return b
+}
+
+func (a Address) String() string {
+	return hex.EncodeToString(a.ToSlice())
 }
 
 func AddressFromBytes(b []byte) Address {
