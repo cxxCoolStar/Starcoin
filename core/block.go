@@ -1,96 +1,56 @@
 package core
 
 import (
+	"Starcoin/crypto"
 	"Starcoin/types"
-	"bytes"
-	"crypto/sha256"
-	"encoding/binary"
 	"io"
 )
 
 type Header struct {
-	Version   uint32
-	PreBlock  types.Hash
-	Timestamp uint64
-	Height    uint32
-	Nonce     uint64
-}
-
-func (h *Header) EncodeBinary(w io.Writer) error {
-	if err := binary.Write(w, binary.LittleEndian, &h.Version); err != nil {
-		return err
-	}
-	if err := binary.Write(w, binary.LittleEndian, &h.PreBlock); err != nil {
-		return err
-	}
-	if err := binary.Write(w, binary.LittleEndian, &h.Timestamp); err != nil {
-		return err
-	}
-	if err := binary.Write(w, binary.LittleEndian, &h.Height); err != nil {
-		return err
-	}
-	return binary.Write(w, binary.LittleEndian, &h.Nonce)
-}
-
-func (h *Header) DecodeBinary(r io.Reader) error {
-	if err := binary.Read(r, binary.LittleEndian, &h.Version); err != nil {
-		return err
-	}
-	if err := binary.Read(r, binary.LittleEndian, &h.PreBlock); err != nil {
-		return err
-	}
-	if err := binary.Read(r, binary.LittleEndian, &h.Timestamp); err != nil {
-		return err
-	}
-	if err := binary.Read(r, binary.LittleEndian, &h.Height); err != nil {
-		return err
-	}
-	return binary.Read(r, binary.LittleEndian, &h.Nonce)
+	Version      uint32
+	DataHash     types.Hash
+	PreBlockHash types.Hash
+	Timestamp    uint64
+	Height       uint32
 }
 
 type Block struct {
-	Header
+	*Header
 	Transactions []Transaction
-
+	Validator    crypto.PublicKey
+	Signature    *crypto.Signature
 	// Cached version of the header hash
 	hash types.Hash
 }
 
-func (b *Block) Hash() types.Hash {
-	buf := &bytes.Buffer{}
-	b.Header.EncodeBinary(buf)
+func NewBlock(h *Header, txx []Transaction) *Block {
+	return &Block{
+		Header:       h,
+		Transactions: txx,
+	}
+}
 
+func (b *Block) Sign(privateKey crypto.PrivateKey) *crypto.Signature {
+	//sig, err := privateKey.Sign(b.)
+	return nil
+}
+
+func (b *Block) Decode(r io.Reader, dec Decoder[*Block]) error {
+	return dec.Decode(r, b)
+}
+
+func (b *Block) Encode(w io.Writer, enc Encoder[*Block]) error {
+	return enc.Encode(w, b)
+}
+
+func (b *Block) Hash(hasher Hasher[*Block]) types.Hash {
 	if b.hash.IsZero() {
-		b.hash = sha256.Sum256(buf.Bytes())
+		b.hash = hasher.Hash(b)
 	}
 
 	return b.hash
 }
 
-func (b *Block) EncodeBinary(w io.Writer) error {
-	if err := b.Header.EncodeBinary(w); err != nil {
-		return err
-	}
+func (b *Block) hashableData() {
 
-	for _, tx := range b.Transactions {
-		if err := tx.EncodeBinary(w); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (b *Block) DecodeBinary(r io.Reader) error {
-	if err := b.Header.DecodeBinary(r); err != nil {
-		return err
-	}
-
-	for _, tx := range b.Transactions {
-		if err := tx.DecodeBinary(r); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
