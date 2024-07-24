@@ -2,14 +2,29 @@ package core
 
 import (
 	"Starcoin/crypto"
+	"Starcoin/types"
 	"fmt"
 )
 
 type Transaction struct {
-	Data []byte
-
+	Data      []byte
 	From      crypto.PublicKey
 	Signature *crypto.Signature
+
+	hash types.Hash
+}
+
+func NewTransaction(data []byte) *Transaction {
+	return &Transaction{
+		Data: data,
+	}
+}
+
+func (tx *Transaction) Hash(hasher Hasher[*Transaction]) types.Hash {
+	if tx.hash.IsZero() {
+		tx.hash = hasher.Hash(tx)
+	}
+	return tx.hash
 }
 
 func (tx *Transaction) Sign(privateKey crypto.PrivateKey) error {
